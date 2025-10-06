@@ -1,4 +1,4 @@
-// server.js - FIXED VERSION
+// server.js - COMPLETE WORKING VERSION
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
@@ -7,8 +7,34 @@ require("dotenv").config();
 const app = express();
 const PORT = process.env.PORT || 10000;
 
+// ================== CORS CONFIGURATION ==================
+const allowedOrigins = [
+  "http://localhost:3000",
+  "http://localhost:3001",
+  "https://mystore-frontend.vercel.app",
+  "https://stylehub-frontend.vercel.app",
+  "https://stylehub-store.vercel.app",
+  "https://your-stylehub-app.vercel.app"
+];
+
+app.use(cors({
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      console.log("🚫 CORS blocked origin:", origin);
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept']
+}));
+
 // ================== MIDDLEWARE ==================
-app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -59,7 +85,7 @@ connectDB();
 
 // ================== ROUTES ==================
 
-// Root route
+// Root route - THIS MUST BE FIRST
 app.get("/", (req, res) => {
   res.json({
     message: "🚀 StyleHub Backend Server is Running!",
@@ -174,39 +200,6 @@ app.get("/api/products", async (req, res) => {
         sizes: ["One Size"],
         colors: ["Black", "Brown", "Tan"],
         features: ["Genuine Leather", "Multiple Compartments", "Adjustable Strap"]
-      },
-      {
-        _id: "5",
-        name: "Men's Casual T-Shirt",
-        description: "Comfortable and stylish casual t-shirt made from 100% cotton.",
-        price: 24.99,
-        originalPrice: 34.99,
-        image: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400&h=400&fit=crop",
-        category: "Men's Casual",
-        gender: "men",
-        rating: 4.3,
-        reviews: 203,
-        inStock: true,
-        sizes: ["S", "M", "L", "XL"],
-        colors: ["White", "Black", "Gray", "Navy"],
-        features: ["100% Cotton", "Premium Fit", "Machine Washable"]
-      },
-      {
-        _id: "6",
-        name: "Women's Elegant Skirt",
-        description: "Flowy and elegant skirt perfect for both casual and formal occasions.",
-        price: 45.99,
-        originalPrice: 59.99,
-        image: "https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?w=400&h=400&fit=crop",
-        category: "Women's Fashion",
-        gender: "women",
-        rating: 4.7,
-        reviews: 94,
-        inStock: true,
-        isHot: true,
-        sizes: ["XS", "S", "M", "L"],
-        colors: ["Black", "Navy", "Burgundy"],
-        features: ["Flowy Design", "Comfortable Waistband", "Easy Care"]
       }
     ];
 
@@ -347,37 +340,6 @@ app.post("/api/seed-products", async (req, res) => {
         sizes: ["XS", "S", "M", "L"],
         colors: ["Floral Red", "Floral Blue", "Solid White"],
         features: ["Breathable Fabric", "Floral Pattern", "Comfort Fit"]
-      },
-      {
-        name: "Men's Running Shoes",
-        description: "High-performance running shoes with advanced cushioning and breathable mesh upper.",
-        price: 79.99,
-        originalPrice: 99.99,
-        image: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&h=400&fit=crop",
-        category: "Men's Footwear",
-        gender: "men",
-        rating: 4.5,
-        reviews: 156,
-        inStock: true,
-        sizes: ["8", "9", "10", "11", "12"],
-        colors: ["Black", "Blue", "White"],
-        features: ["Advanced Cushioning", "Breathable Mesh", "Durable Sole"]
-      },
-      {
-        name: "Women's Designer Handbag",
-        description: "Elegant leather handbag with multiple compartments and adjustable strap.",
-        price: 69.99,
-        originalPrice: 89.99,
-        image: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=400&h=400&fit=crop",
-        category: "Women's Accessories",
-        gender: "women",
-        rating: 4.9,
-        reviews: 67,
-        inStock: true,
-        isNew: true,
-        sizes: ["One Size"],
-        colors: ["Black", "Brown", "Tan"],
-        features: ["Genuine Leather", "Multiple Compartments", "Adjustable Strap"]
       }
     ];
 
@@ -472,7 +434,7 @@ app.post("/api/orders", async (req, res) => {
   }
 });
 
-// FIXED: 404 handler - Use proper syntax for Express 5
+// 404 handler - MUST BE LAST
 app.use((req, res) => {
   res.status(404).json({
     success: false,
